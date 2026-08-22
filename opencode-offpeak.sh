@@ -14,6 +14,7 @@ set -euo pipefail
 WAIT_OVERRIDE=""
 PROMPT_FILE=""
 PROMPT=""
+MODEL=""
 
 usage() {
   echo "Usage: opencode-offpeak [-w seconds] [-f file | - | prompt] [-m model]" >&2
@@ -26,9 +27,11 @@ usage() {
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -w) WAIT_OVERRIDE="$2"; shift 2 ;;
-    -f) PROMPT_FILE="$2"; shift 2 ;;
-    -m) MODEL="$2"; shift 2 ;;
+    -w) [[ $# -ge 2 ]] || usage
+         [[ "$2" =~ ^[0-9]+$ ]] || { echo "Error: -w requires a numeric value" >&2; usage; }
+         WAIT_OVERRIDE="$2"; shift 2 ;;
+    -f) [[ $# -ge 2 ]] || usage; PROMPT_FILE="$2"; shift 2 ;;
+    -m) [[ $# -ge 2 ]] || usage; MODEL="$2"; shift 2 ;;
     -)  PROMPT="$(cat)"; shift ;;
     -h|--help) usage ;;
     *)  PROMPT="$1"; shift ;;
@@ -49,21 +52,15 @@ if [[ -z "$MODEL" ]]; then
 fi
 
 case "$MODEL" in
-  Flash) MODELSTRING="-m \"DeepSeek V4 Flash\"";;
-  Pro) MODELSTRING="-m \"DeepSeek V4 Pro\"";;
+  Flash) MODEL_ARGS=(-m "DeepSeek V4 Flash");;
+  Pro) MODEL_ARGS=(-m "DeepSeek V4 Pro");;
   *) echo "Error: invalid model string" >&2 && usage;;
 esac
 
 # --- peak/off-peak logic ---
 
-off_peak_start_hours=(0 4 10)  # UTC hours when off-peak begins
-
 current_utc_hour() {
   date -u +%H
-}
-
-current_utc_minute() {
-  date -u +%M
 }
 
 # Returns 0 if off-peak, 1 if on-peak.
@@ -78,12 +75,12 @@ is_off_peak() {
 
 # Seconds until next off-peak window (00, 04, or 10 UTC).
 seconds_until_offpeak() {
-  local h m next_h offset
-  h=$(current_utc_hour)
-  m=$(current_utc_minute)
+  local h m s next_h offset
+  read -r h m s <<< "$(date -u '+%H %M %S')"
   h=$((10#$h))  # strip leading zero
   m=$((10#$m))
-  local now_secs=$(( h * 3600 + m * 60 ))
+  s=$((10#$s))
+  local now_secs=$(( h * 3600 + m * 60 + s ))
 
   # Off-peak starts at 0:00, 4:00, 10:00 UTC each day
   # Find the next one
@@ -107,11 +104,11 @@ human_duration() {
   local secs=$1
   local h=$(( secs / 3600 ))
   local m=$(( (secs % 3600) / 60 ))
+  local s=$(( secs % 60 ))
   local parts=()
   [[ $h -gt 0 ]] && parts+=("${h}h")
   [[ $m -gt 0 ]] && parts+=("${m}m")
-  local s=$(( secs % 60 ))
-  [[ ${#parts[@]} -eq 0 ]] && parts+=("${s}s")
+  [[ $s -gt 0 || ${#parts[@]} -eq 0 ]] && parts+=("${s}s")
   echo "${parts[*]}"
 }
 
@@ -119,7 +116,7 @@ human_duration() {
 
 if is_off_peak; then
   echo "Off-peak active. Releasing now."
-  opencode run "$PROMPT" "$MODELSTRING"
+  opencode run "$PROMPT" "${MODEL_ARGS[@]}"
   exit $?
 fi
 
@@ -129,7 +126,7 @@ max_wait="${WAIT_OVERRIDE:-}"
 if [[ -n "$max_wait" ]] && [[ $wait_secs -gt $max_wait ]]; then
   echo "On-peak. Next off-peak in $(human_duration $wait_secs), but max wait is ${max_wait}s." >&2
   echo "Releasing now anyway." >&2
-  opencode run "$PROMPT" "$MODELSTRING"
+  opencode run "$PROMPT" "${MODEL_ARGS[@]}"
   exit $?
 fi
 
@@ -137,4 +134,4 @@ echo "On-peak. Waiting $(human_duration $wait_secs) for off-peak to begin..."
 sleep "$wait_secs"
 
 echo "Off-peak started. Releasing prompt."
-opencode run "$PROMPT" "$MODELSTRING"
+opencode run "$PROMPT" "${MODEL_ARGS[@]}"
