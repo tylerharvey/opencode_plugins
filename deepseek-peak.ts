@@ -70,7 +70,7 @@ export const deepseekPeak = async (_ctx) => {
     return {
         "experimental.chat.system.transform": async (input, output) => {
           const status = peakStatus()
-          output.system = [...(output.system || []), systemBlock(status)]
+          ;(output.system ??= []).push(systemBlock(status))
         },
     }
 }
