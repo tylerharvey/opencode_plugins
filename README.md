@@ -1,4 +1,4 @@
-These are plugins for the [opencode](opencode.ai) harness. To use them, stick them in `~/.config/opencode/plugins/` (on Unix) or a project plugin directory, `<project>/.opencode/plugins/` and run opencode.
+These are plugins for the [opencode](opencode.ai) harness. To use them, stick them in `~/.config/opencode/plugins/` (on Unix) or a project plugin directory, `<project>/.opencode/plugins/` and run opencode. The `copy_to_plugins_dir.sh` does this by creating symbolic links to the files here.
 
 # What they are
 ## summaryexit.ts
