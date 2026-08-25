@@ -52,8 +52,8 @@ if [[ -z "$MODEL" ]]; then
 fi
 
 case "$MODEL" in
-  Flash) MODEL_ARGS=(-m "DeepSeek V4 Flash");;
-  Pro) MODEL_ARGS=(-m "DeepSeek V4 Pro");;
+  Flash) MODEL_ARGS=(-m "deepseek/deepseek-v4-flash");;
+  Pro) MODEL_ARGS=(-m "deepseek/deepseek-v4-pro");;
   *) echo "Error: invalid model string" >&2 && usage;;
 esac
 
