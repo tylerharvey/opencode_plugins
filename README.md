@@ -2,7 +2,7 @@ These are plugins for the [opencode](opencode.ai) harness. To install them via s
 
 # What they are
 ## summaryexit.ts
-This provides /summaryexit, which asks the current model to summarize the session in an output `session_summary-ses_<sessionID>.md` file before opencode exits. This is designed as a cost-saving tool so that you can "save progress" on a large session. 
+This provides /summaryexit, which asks the current model to summarize the session in an output `<session title>_to-be-continued.md` file before opencode exits. This is designed as a cost-saving tool so that you can "save progress" on a large session. 
 ## deepseek-peak.ts
 Provides a little indicator on whether it's currently DeepSeek Peak hours for the official DeepSeek API. 
 ## opencode-offpeak.sh
