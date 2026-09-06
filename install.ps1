@@ -6,8 +6,9 @@
     Installs this repo's opencode extensions into the global config directory
     that opencode scans at startup:
 
-        *.ts -> <config>\plugins\*.ts   (auto-loaded plugins)
-        *.md -> <config>\command\*.md   (slash commands; README.md is skipped)
+        *.ts       -> <config>\plugins\*.ts   (auto-loaded plugins)
+        *-tui.ts   -> <config>\tui-plugins\*.ts  (TUI plugins, referenced by tui.json)
+        *.md       -> <config>\command\*.md   (slash commands; README.md is skipped)
 
     Target directory resolution mirrors opencode itself:
         $env:OPENCODE_CONFIG_DIR, else ${XDG_CONFIG_HOME:-~/.config}\opencode
@@ -39,13 +40,19 @@ else {
 	$ConfigDir = Join-Path $HOME '.config/opencode'
 }
 
-$pluginFiles = @(Get-ChildItem -Path (Join-Path $SrcDir '*.ts') -File -ErrorAction SilentlyContinue)
+$tuiPluginFiles = @(
+	Get-ChildItem -Path (Join-Path $SrcDir '*-tui.ts') -File -ErrorAction SilentlyContinue
+)
+$pluginFiles = @(
+	Get-ChildItem -Path (Join-Path $SrcDir '*.ts') -File -ErrorAction SilentlyContinue |
+		Where-Object { $_.Name -notlike '*-tui.ts' }
+)
 $commandFiles = @(
 	Get-ChildItem -Path (Join-Path $SrcDir '*.md') -File -ErrorAction SilentlyContinue |
 		Where-Object { $_.Name -ine 'README.md' }
 )
 
-if ($pluginFiles.Count -eq 0 -and $commandFiles.Count -eq 0) {
+if ($tuiPluginFiles.Count -eq 0 -and $pluginFiles.Count -eq 0 -and $commandFiles.Count -eq 0) {
 	[Console]::Error.WriteLine("Nothing to install: no .ts or .md files found in $SrcDir")
 	exit 1
 }
@@ -92,6 +99,12 @@ Write-Host ('into        {0}' -f $ConfigDir)
 Write-Host ''
 
 $status = $true
+
+foreach ($file in $tuiPluginFiles) {
+	if (-not (Install-ExtensionFile -Source $file.FullName -DestDir (Join-Path $ConfigDir 'tui-plugins'))) {
+		$status = $false
+	}
+}
 
 foreach ($file in $pluginFiles) {
 	if (-not (Install-ExtensionFile -Source $file.FullName -DestDir (Join-Path $ConfigDir 'plugins'))) {

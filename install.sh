@@ -2,8 +2,9 @@
 # Installs this repo's opencode extensions into the global config directory
 # that opencode scans at startup:
 #
-#   *.ts -> <config>/plugins/*.ts   (auto-loaded plugins)
-#   *.md -> <config>/command/*.md   (slash commands; README.md is skipped)
+#   *.ts       -> <config>/plugins/*.ts   (auto-loaded plugins)
+#   *-tui.ts   -> <config>/tui-plugins/*.ts  (TUI plugins, referenced by tui.json)
+#   *.md       -> <config>/command/*.md   (slash commands; README.md is skipped)
 #
 # Target directory resolution mirrors opencode itself:
 #   $OPENCODE_CONFIG_DIR, else ${XDG_CONFIG_HOME:-~/.config}/opencode
@@ -25,7 +26,15 @@ SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="${OPENCODE_CONFIG_DIR:-${XDG_CONFIG_HOME:-${HOME}/.config}/opencode}"
 
 shopt -s nullglob
-plugin_files=("${SRC_DIR}"/*.ts)
+tui_plugin_files=()
+plugin_files=()
+for file in "${SRC_DIR}"/*.ts; do
+	if [[ "$(basename "${file}")" == *-tui.ts ]]; then
+		tui_plugin_files+=("${file}")
+	else
+		plugin_files+=("${file}")
+	fi
+done
 command_files=()
 for file in "${SRC_DIR}"/*.md; do
 	if [ "$(basename "${file}")" != "README.md" ]; then
@@ -34,7 +43,7 @@ for file in "${SRC_DIR}"/*.md; do
 done
 shopt -u nullglob
 
-if [ "${#plugin_files[@]}" -eq 0 ] && [ "${#command_files[@]}" -eq 0 ]; then
+if [ "${#tui_plugin_files[@]}" -eq 0 ] && [ "${#plugin_files[@]}" -eq 0 ] && [ "${#command_files[@]}" -eq 0 ]; then
 	echo "Nothing to install: no .ts or .md files found in ${SRC_DIR}" >&2
 	exit 1
 fi
@@ -67,6 +76,10 @@ install_file() {
 printf 'Installing from %s\ninto        %s\n\n' "${SRC_DIR}" "${CONFIG_DIR}"
 
 status=0
+
+for file in "${tui_plugin_files[@]}"; do
+	install_file "${file}" "${CONFIG_DIR}/tui-plugins" || status=1
+done
 
 for file in "${plugin_files[@]}"; do
 	install_file "${file}" "${CONFIG_DIR}/plugins" || status=1
