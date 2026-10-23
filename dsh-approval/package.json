@@ -1,0 +1,29 @@
+{
+  "name": "dsh-approval-workspaces",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Auto-approve sandbox escalation requests whose verified target path lies inside a workspace listed in a configuration file.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "logic.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "auto-approve-workspaces.example.json",
+    "test/*.test.mjs"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

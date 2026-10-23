@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Workspace Auto-Approval",
+    "description": "Automatically approves sandbox escalation requests whose verified target path lies inside a workspace listed in auto-approve-workspaces.json."
+  }
+}

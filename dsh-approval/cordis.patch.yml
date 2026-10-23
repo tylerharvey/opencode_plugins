@@ -1,0 +1,12 @@
+# Local bundle: auto-approve sandbox escalation requests whose verified
+# target path lies inside a workspace listed in the JSON configuration file
+# ($DSH_HOME/auto-approve-workspaces.json by default).
+#
+# Optional overrides (a matching override replaces the complete config):
+#   config:
+#     workspacesFile: /dsh-home/auto-approve-workspaces.json
+#     tools: [write, edit]
+#     modes: [danger-full-access]
+- insert:
+    - id: approval-workspaces
+      name: dsh-approval-workspaces

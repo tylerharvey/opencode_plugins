@@ -1,0 +1,12 @@
+{
+  "workspaces": [
+    "/home/trh/Packages/opencode_instructions",
+    "/home/trh/Packages/opencode_artifacts",
+    "/home/trh/Packages/opencode_plugins",
+    "/home/trh/Packages/egmpdbc",
+    "/home/trh/Packages/Ioniq5_CAN",
+    "/home/trh/Packages/wicant-i-precondition",
+    "/home/trh/Packages/wican-fw",
+    "/home/trh/Misc_Projects"
+  ]
+}

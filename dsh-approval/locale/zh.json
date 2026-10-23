@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "工作区自动授权",
+    "description": "当沙箱升级请求经校验的目标路径位于 auto-approve-workspaces.json 列出的工作区内时，自动批准该请求。"
+  }
+}
