@@ -71,7 +71,20 @@ dsh plugin --profile web add /home/trh/Packages/opencode_plugins/dsh-approval
 dsh plugin --profile web remove dsh-approval-workspaces
 ```
 
-If pnpm refuses with `ERR_PNPM_UNEXPECTED_STORE`, the profile's `node_modules` records a store from another environment (for example the host's `~/.local/share/pnpm/store` while a container resolves `$DSH_HOME/.pnpm-store`). Fix the store on the machine that owns it, or pin a store directory both environments can reach. A local bundle can also be linked by hand: add `"dsh-approval-workspaces": "link:/home/trh/Packages/opencode_plugins/dsh-approval"` to the profile's `dependencies`, symlink it into the profile's `node_modules`, and select it with the Plugin Manager (`set_bundle`), which composes it live on an HMR profile.
+### Profiles shared by two environments
+
+pnpm stores a `link:` dependency's target relative to the profile directory (`pnpm-lock.yaml` → `version: link:...`). When the same `~/.dsh` profile is used from two environments whose profile paths differ (for example `~/.dsh/profiles/web` on the host and `/dsh-home/profiles/web` in a container), linking an outside directory stores a relative path that resolves in only one of them. The other environment then creates a broken `node_modules` link and fails with `dsh: cannot resolve profile bundle "..."` on its next `dsh plugin` command.
+
+Link from inside the profile so every stored path is profile-relative:
+
+```sh
+mkdir -p ~/.dsh/profiles/web/local-plugins
+ln -s /home/trh/Packages/opencode_plugins/dsh-approval ~/.dsh/profiles/web/local-plugins/dsh-approval
+```
+
+Set the dependency to `"dsh-approval-workspaces": "link:./local-plugins/dsh-approval"`, run `pnpm install --lockfile-only` in the profile (it records `version: link:local-plugins/dsh-approval`), link `node_modules/dsh-approval-workspaces -> ../local-plugins/dsh-approval`, and select the bundle with the Plugin Manager (`set_bundle`). The absolute target lives only in the profile-local symlink, which is identical on both sides.
+
+If pnpm refuses with `ERR_PNPM_UNEXPECTED_STORE`, the profile's `node_modules` records a store from another environment (for example the host's `~/.local/share/pnpm/store` while a container resolves `$DSH_HOME/.pnpm-store`). Fix the store on the machine that owns it, or pin a store directory both environments can reach.
 
 ## Verification
 
